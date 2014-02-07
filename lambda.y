@@ -4,7 +4,7 @@ rule
   target: expr EOL           { result = val[0] }
 
   term:       VAR           { result = Term.new.replace val }
-            | '(' expr ')'  { result = val }
+            | '(' expr ')'  { result = val[1] }
             | '\\' var_list '.' expr { result = Abst.new.replace [val[1],val[3]] }
   var_list: VAR             { result = VarList.new.replace val }
            | var_list VAR   { result = val[0] << val[1] }
