@@ -1,7 +1,15 @@
 #!/usr/bin/ruby
+# -*- coding: utf-8 -*-
 require './lambda.tab.rb'
 require  './lexer.rb'
 require 'readline'
+
+LAMBDA = "\u03bb"
+
+def title
+  puts "#{LAMBDA}の代わりに \\ を使います。"
+  puts "C(...) で展開します。"
+end
 
 def read_eval_print_loop
   while true
@@ -12,13 +20,12 @@ def read_eval_print_loop
     cp =  LambdaParser.new(lexer)
     root = cp.parse
     puts root.show
-    puts "カリー化します:"
-    puts root.expand.show
     puts
   end
 end
 
 if $*.empty?
+  title
   read_eval_print_loop
 else
   vtable = {}

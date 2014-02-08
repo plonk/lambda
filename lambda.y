@@ -6,6 +6,10 @@ target          : expr EOL
                     {
                         result = val[0]
                     }
+                | CMD '(' expr ')' EOL
+                    {
+                        result = Command.new(val[0], val[2])
+                    }
 
 term            : VAR
                     {
@@ -111,6 +115,28 @@ class Abst < Node
   end
 end
 
+class Command < Node
+  def initialize(name, lamda)
+    @name = name
+    @lambda = lamda
+  end
+
+  def execute
+    case @name
+    when "C"
+      @lambda.expand.show
+    when "FV"
+      -9999
+    else
+      raise "unknown command #{@name}"
+    end
+  end
+
+  def show
+    execute
+  end
+end
+  
 ---- inner
 
 def initialize(lexer)

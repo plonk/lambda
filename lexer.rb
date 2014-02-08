@@ -17,12 +17,14 @@ class Lexer
     when /\A[\n \t]+/      # ホワイトスペース
       @str = $'
       return next_token
-    when /\A[()\\.$]/
+    when /\A[()\\.]/
       [$&, $&]
     when /\A[a-z]/
       [:VAR, $&]
+    when /\A[A-Z]+/
+      [:CMD, $&]
     else
-      raise "NANJA"
+      raise "illegal token"
     end
 
     @str = $'
