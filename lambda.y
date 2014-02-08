@@ -20,12 +20,18 @@ term            : VAR
                         result = val[1]
                     }
                 | '\\' var_list '.' expr
-                    { result = Abst.new(val[1],val[3])
+                    {
+                        result = Abst.new(val[1],val[3])
                     }
                 | term '[' VAR '/' VAR ']'
                     {
                         result = Subst.new(val[0], val[4], val[2])
                     }
+                | term '[' VAR ':=' expr ']'
+                    {
+                        result = TermSubst.new(val[0], val[2], val[4])
+                    }
+
 
 var_list        : VAR
                     {
@@ -161,13 +167,15 @@ class Command < Node
 end
 
 class Subst < Node
+  attr_reader :lambda, :from, :to
+
   def initialize(lamda, from, to)
     @lambda = lamda
     @from = from
     @to = to
   end
 
-  def substitute(lamda)
+  def substitute(lamda = @lambda)
     if lamda.is_a? Var
       if lamda.name == @from
         Var.new(@to)
@@ -189,6 +197,55 @@ class Subst < Node
 
   def expand
     Subst.new(@lambda.expand, @from, @to)
+  end
+
+  def show
+    substitute(@lambda).show
+  end
+
+  def free_variables(bound)
+    @lambda.free_variables(bound)
+  end
+end
+
+class TermSubst < Node
+  attr_reader :lambda, :from, :to
+
+  def initialize(lamda, from, to)
+    @lambda = lamda
+    @from = from
+    @to = to
+  end
+
+  def substitute(lamda = @lambda)
+    if lamda.is_a? Var
+      if lamda.name == @from
+        @to
+      else
+        lamda
+      end
+    elsif lamda.is_a? Apply
+      Apply.new(substitute(lamda.applicand), substitute(lamda.argument))
+    elsif lamda.is_a? Abst
+      if lamda.params.include? @from
+        lamda
+      else
+        unused = (('a'..'z').to_a - to.free_variables([]))[0]
+        # OMG
+        Abst.new(
+          [unused],
+          TermSubst.new(
+            Subst.new(lamda.body, lamda.params[0], unused).substitute,
+            @from,
+            @to).substitute)
+      end
+    else
+      lamda # ?
+    end
+  end
+
+  def expand
+    TermSubst.new(@lambda.expand, @from, @to)
   end
 
   def show
