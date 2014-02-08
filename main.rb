@@ -1,12 +1,13 @@
 #!/usr/bin/ruby
 require './lambda.tab.rb'
 require  './lexer.rb'
+require 'readline'
 
 def read_eval_print_loop
   while true
-    print "REPL> "
-    line = gets
+    line = Readline.readline "REPL> ", true
     break if line == nil
+    line += "\n"
     lexer = Lexer.new(line)
     cp =  LambdaParser.new(lexer)
     root = cp.parse
