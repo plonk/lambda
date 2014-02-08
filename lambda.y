@@ -23,6 +23,10 @@ term            : VAR
                     {
                         result = Abst.new(val[1],val[3])
                     }
+                | term '[' VAR '/' VAR ']'
+                    {
+                        result = Subst.new(val[0], val[4], val[2])
+                    }
 
 var_list        : VAR
                     {
@@ -138,6 +142,22 @@ class Command < Node
     else
       raise "unknown command #{@name}"
     end
+  end
+
+  def show
+    execute
+  end
+end
+
+class Subst < Node
+  def initialize(lamda, from, to)
+    @lambda = lamda
+    @from = from
+    @to = to
+  end
+
+  def execute
+    
   end
 
   def show
