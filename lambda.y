@@ -66,6 +66,10 @@ class Var < Node
   def show
     @name
   end
+
+  def free_variables(bound)
+    bound.include?(@name) ? [] : [@name]
+  end
 end
 
 class Apply < Node
@@ -80,15 +84,15 @@ class Apply < Node
     Apply.new(@applicand.expand, @argument.expand)
   end
 
-  # カッコを省略してみよう
   def show
     a = @applicand.show
     b = @argument.show
-    if a[0] == '(' and b[-1] == ')'
-      "#{a} #{b}"
-    else
-      "(#{a} #{b})"
-    end
+    b = "(#{b})" if Apply === @argument
+    "#{a} #{b}"
+  end
+
+  def free_variables(bound)
+    @applicand.free_variables(bound) + @argument.free_variables(bound)
   end
 end
 
@@ -113,6 +117,10 @@ class Abst < Node
   def show
     "(\\#{@parameters.join}.#{@body.show})"
   end
+
+  def free_variables(bound)
+    @body.free_variables(bound + @parameters)
+  end
 end
 
 class Command < Node
@@ -126,7 +134,7 @@ class Command < Node
     when "C"
       @lambda.expand.show
     when "FV"
-      -9999
+      "{#{@lambda.free_variables([]).join(',')}}"
     else
       raise "unknown command #{@name}"
     end
