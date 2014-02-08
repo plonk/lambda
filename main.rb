@@ -8,7 +8,7 @@ LAMBDA = "\u03bb"
 
 def title
   puts "#{LAMBDA}の代わりに \\ を使います。"
-  puts "C(...) で展開します。"
+  # puts "C(...) で展開します。"
 end
 
 def read_eval_print_loop
@@ -16,10 +16,12 @@ def read_eval_print_loop
     line = Readline.readline "REPL> ", true
     break if line == nil
     line += "\n"
+
     lexer = Lexer.new(line)
     cp =  LambdaParser.new(lexer)
+
     root = cp.parse
-    puts root.show
+    puts root.expand.show
     puts
   end
 end

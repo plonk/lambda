@@ -20,8 +20,7 @@ term            : VAR
                         result = val[1]
                     }
                 | '\\' var_list '.' expr
-                    {
-                        result = Abst.new(val[1],val[3])
+                    { result = Abst.new(val[1],val[3])
                     }
                 | term '[' VAR '/' VAR ']'
                     {
@@ -117,10 +116,10 @@ class Abst < Node
   end
 
   def expand
-    if params.size > 1
-      params = params.dup
-      var = params.shift
-      Abst.new([var], Abst.new(params, body).expand)
+    if @params.size > 1
+      rest = @params[1..-1]
+      var = @params.first
+      Abst.new([var], Abst.new(rest, body).expand)
     else
       Abst.new(@params, @body.expand)
     end
@@ -150,6 +149,10 @@ class Command < Node
     else
       raise "unknown command #{@name}"
     end
+  end
+
+  def expand
+    Command.new(@name, @lambda.expand)
   end
 
   def show
@@ -184,8 +187,16 @@ class Subst < Node
     end
   end
 
+  def expand
+    Subst.new(@lambda.expand, @from, @to)
+  end
+
   def show
     substitute(@lambda).show
+  end
+
+  def free_variables(bound)
+    @lambda.free_variables(bound)
   end
 end
   

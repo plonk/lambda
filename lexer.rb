@@ -17,7 +17,7 @@ class Lexer
     when /\A[\n \t]+/      # ホワイトスペース
       @str = $'
       return next_token
-    when /\A[()\\.]/
+    when /\A[()\\.\/\[\]]/
       [$&, $&]
     when /\A[a-z]/
       [:VAR, $&]
