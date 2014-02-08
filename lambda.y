@@ -6,7 +6,7 @@ rule
   term:       VAR           { result = Term.new.replace val }
             | '(' expr ')'  { result = val[1] }
             | '\\' var_list '.' expr { result = Abst.new.replace [val[1],val[3]] }
-  var_list: VAR             { result = VarList.new.replace val }
+  var_list: VAR             { result = VList.new.replace val }
            | var_list VAR   { result = val[0] << val[1] }
 
   expr: term        { result = val[0] }
@@ -25,7 +25,7 @@ end
 EOD
 end
 #create_category("Target")
-create_category("VarList")
+create_category("VList")
 create_category("Term")
 create_category("Apply")
 create_category("Abst")

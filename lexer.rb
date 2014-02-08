@@ -4,7 +4,7 @@ class Lexer
   end
   
   def next_token
-    p do_next_token
+    do_next_token
   end
 
   def do_next_token
