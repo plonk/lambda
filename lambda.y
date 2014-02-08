@@ -54,6 +54,14 @@ class Node
   def show
     raise 'unimplemented'
   end
+
+  def free_variables(bound)
+    raise 'unimplemented'
+  end
+
+  def show
+    raise 'unimplemented'
+  end
 end
 
 class Var < Node
@@ -101,29 +109,29 @@ class Apply < Node
 end
 
 class Abst < Node
-  attr_reader :parameters, :body
+  attr_reader :params, :body
 
-  def initialize(parameters, body)
-    @parameters = parameters
+  def initialize(params, body)
+    @params = params
     @body = body
   end
 
   def expand
-    if parameters.size > 1
-      params = parameters.dup
+    if params.size > 1
+      params = params.dup
       var = params.shift
       Abst.new([var], Abst.new(params, body).expand)
     else
-      Abst.new(@parameters, @body.expand)
+      Abst.new(@params, @body.expand)
     end
   end
 
   def show
-    "(\\#{@parameters.join}.#{@body.show})"
+    "(\\#{@params.join}.#{@body.show})"
   end
 
   def free_variables(bound)
-    @body.free_variables(bound + @parameters)
+    @body.free_variables(bound + @params)
   end
 end
 
@@ -156,12 +164,28 @@ class Subst < Node
     @to = to
   end
 
-  def execute
-    
+  def substitute(lamda)
+    if lamda.is_a? Var
+      if lamda.name == @from
+        Var.new(@to)
+      else
+        lamda
+      end
+    elsif lamda.is_a? Apply
+      Apply.new(substitute(lamda.applicand), substitute(lamda.argument))
+    elsif lamda.is_a? Abst
+      if lamda.params.include? @from
+        lamda
+      else
+        Abst.new(lamda.params, substitute(lamda.body))
+      end
+    else
+      lamda # ?
+    end
   end
 
   def show
-    execute
+    substitute(@lambda).show
   end
 end
   
