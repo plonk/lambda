@@ -9,7 +9,7 @@ target          : expr EOL
 
 term            : VAR
                     {
-                        result = Term.new.replace val
+                        result = Var.new(val[0])
                     }
                 | '(' expr ')'
                     {
@@ -17,16 +17,16 @@ term            : VAR
                     }
                 | '\\' var_list '.' expr
                     {
-                        result = Abst.new.replace [val[1],val[3]]
+                        result = Abst.new(val[1],val[3])
                     }
 
 var_list        : VAR
                     {
-                        result = VList.new.replace val
+                        result = [val[0]]
                     }
                 | var_list VAR
                     {
-                        result = val[0] << val[1]
+                        result = val[0] + [val[1]]
                     }
 
 expr            : term
@@ -35,38 +35,93 @@ expr            : term
                     }
                 | expr term
                     {
-                        result = Apply.new.replace val
+                        result = Apply.new(val[0], val[1])
                     }
 
 end
 
 ---- header
 
-def create_category(name)
-  eval <<EOD
-class #{name} < Array
-  def inspect()
-    #{name.dump} + super
+class Node
+  def show
+    raise 'unimplemented'
   end
 end
-EOD
+
+class Var < Node
+  attr_reader :name
+
+  def initialize(name)
+    @name = name
+  end
+
+  def expand
+    self
+  end
+
+  def show
+    @name
+  end
 end
-#create_category("Target")
-create_category("VList")
-create_category("Term")
-create_category("Apply")
-create_category("Abst")
+
+class Apply < Node
+  attr_reader :applicand, :argument
+
+  def initialize(applicand, argument)
+    @applicand = applicand
+    @argument = argument
+  end
+
+  def expand
+    Apply.new(@applicand.expand, @argument.expand)
+  end
+
+  # カッコを省略してみよう
+  def show
+    a = @applicand.show
+    b = @argument.show
+    if a[0] == '(' and b[-1] == ')'
+      "#{a} #{b}"
+    else
+      "(#{a} #{b})"
+    end
+  end
+end
+
+class Abst < Node
+  attr_reader :parameters, :body
+
+  def initialize(parameters, body)
+    @parameters = parameters
+    @body = body
+  end
+
+  def expand
+    if parameters.size > 1
+      params = parameters.dup
+      var = params.shift
+      Abst.new([var], Abst.new(params, body).expand)
+    else
+      Abst.new(@parameters, @body.expand)
+    end
+  end
+
+  def show
+    "(\\#{@parameters.join}.#{@body.show})"
+  end
+end
 
 ---- inner
-  def initialize(lexer)
-    @lexer = lexer
-    super()
-  end
 
-  def parse
-    do_parse
-  end
+def initialize(lexer)
+  @lexer = lexer
+  super()
+end
 
-  def next_token
-    @lexer.next_token
-  end
+def parse
+  do_parse
+end
+
+def next_token
+  @lexer.next_token
+end

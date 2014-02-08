@@ -2,29 +2,6 @@
 require './lambda.tab.rb'
 require  './lexer.rb'
 
-def expand(node)
-  case node
-  when Abst
-    varlist = node[0]
-    raise unless varlist.is_a? VList
-    case varlist.size
-    when 0
-      raise 'varlist empty'
-    when 1
-      node
-    else
-      copy = node.dup
-      copy[0] = copy[0].dup
-      vname = copy[0].shift
-      Abst.new.replace [VList.new.replace([vname]), expand(copy)]
-    end
-  when String
-    node
-  else
-    node.class.new.replace node.map{|x| expand(x)} 
-  end
-end
-
 def read_eval_print_loop
   while true
     print "REPL> "
@@ -33,9 +10,9 @@ def read_eval_print_loop
     lexer = Lexer.new(line)
     cp =  LambdaParser.new(lexer)
     root = cp.parse
-    p root
-puts "カリー化します:"
-    p expand(root)
+    puts root.show
+    puts "カリー化します:"
+    puts root.expand.show
     puts
   end
 end
