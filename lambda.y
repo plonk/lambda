@@ -55,6 +55,8 @@ end
 
 ---- header
 
+require './util.rb'
+
 class Node
   def show
     raise 'unimplemented'
@@ -170,6 +172,10 @@ class Subst < Node
   attr_reader :lambda, :from, :to
 
   def initialize(lamda, from, to)
+    raise TypeError unless lamda.is_type? Node
+    raise TypeError unless from.is_type? String
+    raise TypeError unless to.is_type? String
+
     @lambda = lamda
     @from = from
     @to = to
