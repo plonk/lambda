@@ -2,11 +2,11 @@ class LambdaParser
 
 rule
 
-target          : expr EOL
+target          : expr
                     {
                         result = val[0]
                     }
-                | CMD '(' expr ')' EOL
+                | CMD '(' expr ')'
                     {
                         result = Command.new(val[0], val[2])
                     }
