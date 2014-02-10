@@ -22,6 +22,22 @@ def parse(line)
   parser.parse
 end
 
+def beta_reduce(lamda, redex)
+  redex_to_subst = lamda.tree_map {|node|
+    if node.show == redex.show then 
+      raise TypeError unless node.is_type? Apply
+      apply = node
+      abst = apply.applicand
+      raise TypeError unless abst.is_type? Abst
+
+      TermSubst.new(abst.body, abst.param, apply.argument)
+    else
+      node
+    end
+  }
+  substitute(redex_to_subst)
+end
+
 def repl_command(line)
   line =~ /^:(\w+)\s*(.+)?$/
   cmd = $1
@@ -32,6 +48,27 @@ def repl_command(line)
     if arg
       fvars = fv(parse(arg)) 
       puts '{' + fvars.join(',') + '}'
+    end
+  when "reduce"
+    lamda = substitute(parse(arg))
+    redexes = lamda.select{|x| x.redex?}
+    
+    if redexes.empty?
+      puts "redex がありません"
+    else
+      puts "ベータredex:"
+      redexes.map(&:show).each_with_index { |s, i|
+        puts "\t#{i+1}) #{s}"
+      }
+
+      ans = Readline.readline "\nどれ？ ", false
+      if ans.to_i <= 0
+        return
+      end
+  
+      idx = ans.to_i - 1
+      exp = beta_reduce(lamda, redexes[idx])
+      puts exp.show
     end
   else
     STDERR.puts "unknown REPL command #{cmd}"
