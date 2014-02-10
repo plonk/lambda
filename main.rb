@@ -38,6 +38,16 @@ def repl_command(line)
   end
 end
 
+def substitute(root)
+  root.tree_map{ |node| 
+    if node.is_a? Subst or node.is_a? TermSubst
+      node.substitute
+    else
+      node
+    end
+  }
+end
+
 def read_eval_print_loop
   loop do
     line = Readline.readline "\nREPL> ", true
@@ -50,6 +60,9 @@ def read_eval_print_loop
       end
 
       root = parse(line)
+    rescue RuntimeError => e
+      STDERR.puts e.message
+      next
     rescue Racc::ParseError
       STDERR.puts "parse error"
       next
@@ -57,6 +70,7 @@ def read_eval_print_loop
 
     puts
     puts root.show
+    puts substitute(root).show
 
     redexes = root.select{|x| x.redex?}
     unless redexes.empty?
