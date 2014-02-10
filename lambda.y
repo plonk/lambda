@@ -152,8 +152,13 @@ class Abst < Node
     @body = body
   end
 
-  def show
-    "(\\#{@param}.#{@body.show})"
+  def show(params = "")
+    params += @param
+    if @body.is_a? Abst
+      @body.show(params)
+    else
+      "(\\#{params}.#{@body.show})"
+    end
   end
 
   def free_variables(bound)
