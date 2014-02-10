@@ -22,18 +22,33 @@ def parse(line)
   parser.parse
 end
 
+def repl_command(line)
+  line =~ /^:(\w+)\s*(.+)?$/
+  cmd = $1
+  arg = $2
+
+  case cmd
+  when /^fv$/
+    if arg
+      fvars = fv(parse(arg)) 
+      puts '{' + fvars.join(',') + '}'
+    end
+  else
+    STDERR.puts "unknown REPL command #{cmd}"
+  end
+end
+
 def read_eval_print_loop
   loop do
     line = Readline.readline "\nREPL> ", true
     break if line == nil
 
-    if line =~ /^:/
-      repl_command(line)
-      next
-    end
-
-
     begin
+      if line =~ /^:/
+        repl_command(line)
+        next
+      end
+
       root = parse(line)
     rescue Racc::ParseError
       STDERR.puts "parse error"
