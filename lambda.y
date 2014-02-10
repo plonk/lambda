@@ -81,6 +81,10 @@ class Node
   def redex?
     false
   end
+
+  def tree_map
+    raise 'unimplemented'
+  end
 end
 
 class Var < Node
@@ -96,6 +100,10 @@ class Var < Node
 
   def free_variables(bound)
     bound.include?(@name) ? [] : [@name]
+  end
+
+  def tree_map
+    yield(self)
   end
 end
 
@@ -127,6 +135,10 @@ class Apply < Node
   def redex?
     @applicand.is_a? Abst
   end
+
+  def tree_map(&f)
+    f.call(Apply.new(@applicand.tree_map(&f), @argument.tree_map(&f)))
+  end
 end
 
 class Abst < Node
@@ -148,6 +160,10 @@ class Abst < Node
   def each(&block)
     @body.each &block
     yield(self)
+  end
+
+  def tree_map(&f)
+    f.call(Abst.new(@param, @body.tree_map(&f)))
   end
 end
 
@@ -185,7 +201,8 @@ class Subst < Node
   end
 
   def show
-    substitute(@lambda).show
+    # substitute(@lambda).show
+    "(#{@lambda.show})[#{@to}/#{@from}]"
   end
 
   def free_variables(bound)
@@ -196,13 +213,21 @@ class Subst < Node
     @lambda.each &block
     yield(self)
   end
+
+  def tree_map(&f)
+    f.call(Subst.new(@lambda.tree_map(&f), @from, @to))
+  end
 end
 
 class TermSubst < Node
   attr_reader :lambda, :from, :to
 
   def initialize(lamda, from, to)
+    raise TypeError unless lamda.is_type? Node
+    raise TypeError unless from.is_type? String
+    raise TypeError unless to.is_type? Node
     @lambda = lamda
+
     @from = from
     @to = to
   end
@@ -235,7 +260,8 @@ class TermSubst < Node
   end
 
   def show
-    substitute(@lambda).show
+    # substitute(@lambda).show
+    "(#{@lambda.show})[#{@from}:=#{@to.show}]"
   end
 
   def free_variables(bound)
@@ -245,6 +271,10 @@ class TermSubst < Node
   def each(&block)
     @lambda.each &block
     yield(self)
+  end
+
+  def tree_map(&f)
+    f.call(TermSubst.new(@lambda.tree_map(&f), @from, @to.tree_map(&f)))
   end
 end
   
