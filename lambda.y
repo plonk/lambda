@@ -58,6 +58,8 @@ end
 require './util.rb'
 
 class Node
+  include Enumerable
+
   def show
     raise 'unimplemented'
   end
@@ -68,6 +70,16 @@ class Node
 
   def show
     raise 'unimplemented'
+  end
+
+  # 深さ優先探索。
+  # 子ノードのないノード向けのデフォルト実装。
+  def each
+    yield(self)
+  end
+
+  def redex?
+    false
   end
 end
 
@@ -113,6 +125,16 @@ class Apply < Node
   def free_variables(bound)
     @applicand.free_variables(bound) + @argument.free_variables(bound)
   end
+
+  def each(&block)
+    @applicand.each &block
+    @argument.each &block
+    yield(self)
+  end
+
+  def redex?
+    @applicand.is_a? Abst
+  end
 end
 
 class Abst < Node
@@ -140,6 +162,11 @@ class Abst < Node
   def free_variables(bound)
     @body.free_variables(bound + @params)
   end
+
+  def each(&block)
+    @body.each &block
+    yield(self)
+  end
 end
 
 class Command < Node
@@ -165,6 +192,11 @@ class Command < Node
 
   def show
     execute
+  end
+
+  def each(&block)
+    @lambda.each &block
+    yield(self)
   end
 end
 
@@ -211,6 +243,11 @@ class Subst < Node
 
   def free_variables(bound)
     @lambda.free_variables(bound)
+  end
+
+  def each(&block)
+    @lambda.each &block
+    yield(self)
   end
 end
 
@@ -260,6 +297,11 @@ class TermSubst < Node
 
   def free_variables(bound)
     @lambda.free_variables(bound)
+  end
+
+  def each(&block)
+    @lambda.each &block
+    yield(self)
   end
 end
   

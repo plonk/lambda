@@ -21,7 +21,11 @@ def read_eval_print_loop
     cp =  LambdaParser.new(lexer)
 
     root = cp.parse
+    puts 
     puts root.expand.show
+
+    puts "\nベータredex:"
+    puts root.select{|x| x.redex?}.map(&:show).map{|s| "\t"+s}
     puts
   end
 end
