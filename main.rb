@@ -106,7 +106,6 @@ def read_eval_print_loop
     end
 
     puts
-    puts root.show
     puts substitute(root).show
 
     redexes = root.select{|x| x.redex?}

@@ -145,6 +145,9 @@ class Abst < Node
   attr_reader :param, :body
 
   def initialize(param, body)
+    raise TypeError unless param.is_a? String
+    raise TypeError unless body.is_a? Node
+
     @param = param
     @body = body
   end
@@ -190,10 +193,10 @@ class Subst < Node
     elsif lamda.is_a? Apply
       Apply.new(substitute(lamda.applicand), substitute(lamda.argument))
     elsif lamda.is_a? Abst
-      if lamda.params.include? @from
+      if lamda.param == @from
         lamda
       else
-        Abst.new(lamda.params, substitute(lamda.body))
+        Abst.new(lamda.param, substitute(lamda.body))
       end
     else
       lamda # ?
@@ -242,15 +245,20 @@ class TermSubst < Node
     elsif lamda.is_a? Apply
       Apply.new(substitute(lamda.applicand), substitute(lamda.argument))
     elsif lamda.is_a? Abst
-      if lamda.params.include? @from
+      if lamda.param == @from
         lamda
       else
-        unused = (('a'..'z').to_a - to.free_variables([]))[0]
+        fvars = to.free_variables([])
+        if fvars.include? lamda.param
+          unused = (('a'..'z').to_a - fvars)[0]
+        else
+          unused = lamda.param
+        end
         # OMG
         Abst.new(
-          [unused],
+          unused,
           TermSubst.new(
-            Subst.new(lamda.body, lamda.params[0], unused).substitute,
+            Subst.new(lamda.body, lamda.param, unused).substitute,
             @from,
             @to).substitute)
       end
