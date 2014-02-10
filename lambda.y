@@ -17,7 +17,11 @@ term            : VAR
                     }
                 | '\\' var_list '.' expr
                     {
-                        result = Abst.new(val[1],val[3])
+                        body = val[3]
+                        val[1].reverse_each do |param|
+                            body = Abst.new(param, body)
+                        end
+                        result = body
                     }
                 | term '[' VAR '/' VAR ']'
                     {
@@ -86,10 +90,6 @@ class Var < Node
     @name = name
   end
 
-  def expand
-    self
-  end
-
   def show
     @name
   end
@@ -105,10 +105,6 @@ class Apply < Node
   def initialize(applicand, argument)
     @applicand = applicand
     @argument = argument
-  end
-
-  def expand
-    Apply.new(@applicand.expand, @argument.expand)
   end
 
   def show
@@ -134,29 +130,19 @@ class Apply < Node
 end
 
 class Abst < Node
-  attr_reader :params, :body
+  attr_reader :param, :body
 
-  def initialize(params, body)
-    @params = params
+  def initialize(param, body)
+    @param = param
     @body = body
   end
 
-  def expand
-    if @params.size > 1
-      rest = @params[1..-1]
-      var = @params.first
-      Abst.new([var], Abst.new(rest, body).expand)
-    else
-      Abst.new(@params, @body.expand)
-    end
-  end
-
   def show
-    "(\\#{@params.join}.#{@body.show})"
+    "(\\#{@param}.#{@body.show})"
   end
 
   def free_variables(bound)
-    @body.free_variables(bound + @params)
+    @body.free_variables(bound + [@param])
   end
 
   def each(&block)
@@ -196,10 +182,6 @@ class Subst < Node
     else
       lamda # ?
     end
-  end
-
-  def expand
-    Subst.new(@lambda.expand, @from, @to)
   end
 
   def show
@@ -250,10 +232,6 @@ class TermSubst < Node
     else
       lamda # ?
     end
-  end
-
-  def expand
-    TermSubst.new(@lambda.expand, @from, @to)
   end
 
   def show

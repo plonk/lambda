@@ -12,17 +12,26 @@ def title
   # puts "C(...) で展開します。"
 end
 
+def fv(node)
+  node.free_variables([])
+end
 
 def parse(line)
   lexer = Lexer.new(line)
   parser = LambdaParser.new(lexer)
-  parser.parse.expand
+  parser.parse
 end
 
 def read_eval_print_loop
   loop do
     line = Readline.readline "\nREPL> ", true
     break if line == nil
+
+    if line =~ /^:/
+      repl_command(line)
+      next
+    end
+
 
     begin
       root = parse(line)
