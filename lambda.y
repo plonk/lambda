@@ -6,10 +6,6 @@ target          : expr
                     {
                         result = val[0]
                     }
-                | CMD '(' expr ')'
-                    {
-                        result = Command.new(val[0], val[2])
-                    }
 
 term            : VAR
                     {
@@ -165,37 +161,6 @@ class Abst < Node
 
   def each(&block)
     @body.each &block
-    yield(self)
-  end
-end
-
-class Command < Node
-  def initialize(name, lamda)
-    @name = name
-    @lambda = lamda
-  end
-
-  def execute
-    case @name
-    when "C"
-      @lambda.expand.show
-    when "FV"
-      "{#{@lambda.free_variables([]).join(',')}}"
-    else
-      raise "unknown command #{@name}"
-    end
-  end
-
-  def expand
-    Command.new(@name, @lambda.expand)
-  end
-
-  def show
-    execute
-  end
-
-  def each(&block)
-    @lambda.each &block
     yield(self)
   end
 end
