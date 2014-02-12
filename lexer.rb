@@ -23,8 +23,6 @@ class Lexer
       [$&, $&]
     when /\A[a-z]'*/
       [:VAR, $&]
-    when /\A[A-Z]+/
-      [:CMD, $&]
     else
       raise "illegal token"
     end
