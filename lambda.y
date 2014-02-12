@@ -240,6 +240,11 @@ class TermSubst < Node
     @to = to
   end
 
+  def get_new_var(oldvar, free_variables)
+    # ('a'..'z').to_a - free_variables[0]
+    oldvar + "'"
+  end
+
   def substitute(lamda = @lambda)
     if lamda.is_a? Var
       if lamda.name == @from
@@ -255,7 +260,7 @@ class TermSubst < Node
       else
         fvars = to.free_variables([])
         if fvars.include? lamda.param
-          unused = (('a'..'z').to_a - fvars)[0]
+          unused = get_new_var(lamda.param, fvars)
         else
           unused = lamda.param
         end

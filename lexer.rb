@@ -21,7 +21,7 @@ class Lexer
       [$&, $&]
     when /\A[()\\.\/\[\]]/
       [$&, $&]
-    when /\A[a-z]/
+    when /\A[a-z]'*/
       [:VAR, $&]
     when /\A[A-Z]+/
       [:CMD, $&]
