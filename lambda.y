@@ -119,7 +119,7 @@ class Apply < Node
     a = @applicand.show
     b = @argument.show
     b = "(#{b})" if Apply === @argument
-    "#{a} #{b}"
+    "#{a}#{b}"
   end
 
   def free_variables(bound)

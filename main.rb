@@ -50,25 +50,32 @@ def repl_command(line)
       puts '{' + fvars.join(',') + '}'
     end
   when "reduce"
-    lamda = substitute(parse(arg))
-    redexes = lamda.select{|x| x.redex?}
+    exp = substitute(parse(arg))
+    history = [exp.show]
     
-    if redexes.empty?
-      puts "redex がありません"
-    else
-      puts "ベータredex:"
-      redexes.map(&:show).each_with_index { |s, i|
-        puts "\t#{i+1}) #{s}"
-      }
+    until (redexes = exp.select{|x| x.redex?}).empty?
+      if redexes.size==1
+        exp = beta_reduce(exp, redexes[0])
+      else
+        puts "ベータredex:"
+        redexes.map(&:show).each_with_index { |s, i|
+          puts "\t#{i+1}) #{s}"
+        }
 
-      ans = Readline.readline "\nどれ？ ", false
-      if ans.to_i <= 0
-        return
+        ans = Readline.readline "\nどれ？ ", false
+        if ans.to_i <= 0
+          return
+        end
+    
+        idx = ans.to_i - 1
+        exp = beta_reduce(exp, redexes[idx])
       end
-  
-      idx = ans.to_i - 1
-      exp = beta_reduce(lamda, redexes[idx])
       puts exp.show
+      if history.include? exp.show
+        puts "... ad infinitum ..."
+        break
+      end
+      history << exp.show
     end
   else
     STDERR.puts "unknown REPL command #{cmd}"
