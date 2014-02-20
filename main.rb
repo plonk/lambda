@@ -4,9 +4,20 @@
 # -*- coding: utf-8 -*-
 require_relative 'lambda.tab.rb'
 require_relative 'michaelson.tab.rb'
-require_relative  'lexer.rb'
+require_relative 'lexer.rb'
+require_relative 'util.rb'
 require 'readline'
 require 'English'
+
+class Matcher
+  def initialize(command_name)
+    @command_name = command_name.as String
+  end
+
+  def ===(input)
+    /\A#{input.as(String)}/ =~ @command_name
+  end
+end
 
 class Program
   LAMBDA = "\u03bb"
@@ -42,21 +53,41 @@ class Program
 
   def repl_command(line)
     line =~ /^:(\w+)\s*(.+)?$/
-    cmd = $1
-    arg = $2
+    cmd = $1; arg = $2
 
     case cmd
-    when /^fv$/
+    when Matcher.new('fv')
+      # 自由変数の表示
       if arg
         fvars = fv(parse(arg)) 
         puts '{' + fvars.join(',') + '}'
       end
-    when "reduce"
+    when Matcher.new('reduce')
+      # 自動簡約
       exp = substitute(parse(arg))
       history = [exp.show]
       
-      until (redexes = exp.select{|x| x.redex?}).empty?
-        if redexes.size>=1
+      until ( redexes = exp.select{|x| x.redex?} ).empty?
+        before = exp.show
+        redex = redexes[0].show
+        puts before.sub(redex) { "\e[32;1m" + redex + "\e[0m" }
+
+        exp = beta_reduce(exp, redexes[0])
+
+        if history.include? exp.show
+          puts "... ad infinitum ..."
+          return
+        end
+        history << exp.show
+      end
+      puts exp.show
+    when Matcher.new('ireduce')
+      # redex 指定の簡約
+      exp = substitute(parse(arg))
+      history = [exp.show]
+      
+      until ( redexes = exp.select{|x| x.redex?} ).empty?
+        if redexes.size==1
           exp = beta_reduce(exp, redexes[0])
         else
           puts "ベータredex:"
@@ -96,6 +127,7 @@ class Program
 
   def read_eval_print_loop
     loop do
+      # 入力を読み込む
       begin
         line = Readline.readline "\nREPL> ", true
       rescue Interrupt
@@ -106,11 +138,7 @@ class Program
 
       begin
         if line =~ /^:/
-          begin
-            repl_command(line)
-          rescue Interrupt
-            STDERR.puts "Interrupted"
-          end
+          repl_command(line)
           next
         end
 
@@ -121,11 +149,16 @@ class Program
       rescue Racc::ParseError
         STDERR.puts "parse error"
         next
+      rescue Interrupt
+        STDERR.puts "\nInterrupted"
+        next
       end
 
+      # [...] 表記の置き換え後に式をエコーバックする
       puts
       puts substitute(root).show
 
+      # redex があれば表示する
       redexes = root.select{|x| x.redex?}
       unless redexes.empty?
         puts "\nベータredex:"
