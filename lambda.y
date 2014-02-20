@@ -55,7 +55,7 @@ end
 
 ---- header
 
-require './util.rb'
+require_relative 'util.rb'
 
 class Node
   include Enumerable
