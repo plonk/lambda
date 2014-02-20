@@ -91,7 +91,7 @@ class Var < Node
   attr_reader :name
 
   def initialize(name)
-    @name = name
+    @name = name.as String
   end
 
   def show
@@ -111,8 +111,8 @@ class Apply < Node
   attr_reader :applicand, :argument
 
   def initialize(applicand, argument)
-    @applicand = applicand
-    @argument = argument
+    @applicand = applicand.as Node
+    @argument = argument.as Node
   end
 
   def show
@@ -145,11 +145,8 @@ class Abst < Node
   attr_reader :param, :body
 
   def initialize(param, body)
-    raise TypeError unless param.is_a? String
-    raise TypeError unless body.is_a? Node
-
-    @param = param
-    @body = body
+    @param = param.as String
+    @body = body.as Node
   end
 
   def show(params = "")
@@ -179,13 +176,9 @@ class Subst < Node
   attr_reader :lambda, :from, :to
 
   def initialize(lamda, from, to)
-    raise TypeError unless lamda.is_type? Node
-    raise TypeError unless from.is_type? String
-    raise TypeError unless to.is_type? String
-
-    @lambda = lamda
-    @from = from
-    @to = to
+    @lambda = lamda.as Node
+    @from = from.as String
+    @to = to.as String
   end
 
   def substitute(lamda = @lambda)
@@ -231,13 +224,10 @@ class TermSubst < Node
   attr_reader :lambda, :from, :to
 
   def initialize(lamda, from, to)
-    raise TypeError unless lamda.is_type? Node
-    raise TypeError unless from.is_type? String
-    raise TypeError unless to.is_type? Node
-    @lambda = lamda
+    @lambda = lamda.as Node
 
-    @from = from
-    @to = to
+    @from = from.as String
+    @to = to.as Node
   end
 
   def get_new_var(oldvar, free_variables)

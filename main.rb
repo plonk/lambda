@@ -4,6 +4,7 @@
 require_relative 'lambda.tab.rb'
 require_relative  'lexer.rb'
 require 'readline'
+require 'English'
 
 LAMBDA = "\u03bb"
 
@@ -25,10 +26,8 @@ end
 def beta_reduce(lamda, redex)
   redex_to_subst = lamda.tree_map {|node|
     if node.show == redex.show then 
-      raise TypeError unless node.is_type? Apply
-      apply = node
-      abst = apply.applicand
-      raise TypeError unless abst.is_type? Abst
+      apply = node.as Apply
+      abst = apply.applicand.as Abst
 
       TermSubst.new(abst.body, abst.param, apply.argument)
     else
@@ -133,25 +132,8 @@ def read_eval_print_loop
 end
 
 def main
-  if $*.empty?
-    title
-    read_eval_print_loop
-  else
-    vtable = {}
-    $*.each do |file|
-      f = File.new(file)
-      code = f.read
-      lexer = Lexer.new(code)
-      parser = LambdaParser.new(lexer, vtable)
-      begin
-        root = parser.parse
-        root.evaluate(vtable)
-      rescue Racc::ParseError
-        puts "parse error while executing #{file}"
-        exit 1
-      end
-    end
-  end
+  title
+  read_eval_print_loop
 end
 
 if $0 == __FILE__
