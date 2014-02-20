@@ -2,7 +2,7 @@
 require 'English'
 
 =begin
-
+字句解析部
 =end
 
 class Lexer
