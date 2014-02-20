@@ -48,6 +48,13 @@ module Type
       self.is_a? constraint.class
     end
   end
+
+  def as(constraint)
+    unless self.is_type? constraint
+      raise TypeError, "#{self.inspect} is not of the expected type #{constraint}"
+    end
+    self
+  end
 end
 
 class Object
