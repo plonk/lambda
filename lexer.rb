@@ -1,3 +1,9 @@
+require 'English'
+
+=begin
+
+=end
+
 class Lexer
   def initialize(str)
     @str = str
@@ -11,23 +17,21 @@ class Lexer
     return nil if @str == ""
 
     ret =
-    case @str
-    when /\A\n/          # 行末
-      [:EOL, "\n"]
-    when /\A[\n \t]+/      # ホワイトスペース
-      @str = $'
-      return next_token
-    when /\A:=/
-      [$&, $&]
-    when /\A[()\\.\/\[\]]/
-      [$&, $&]
-    when /\A[a-z]'*/
-      [:VAR, $&]
-    else
-      raise "illegal token"
-    end
+      case @str
+      when /\A[\n \t]+/      # ホワイトスペース
+        @str = $POSTMATCH
+        return next_token
+      when /\A:=/
+        [$MATCH, $MATCH]
+      when /\A[()\\.\/\[\]]/
+        [$MATCH, $MATCH]
+      when /\A[a-z]'*/
+        [:VAR, $MATCH]
+      else
+        raise "illegal token"
+      end
 
-    @str = $'
+    @str = $POSTMATCH
     ret
   end
 end
