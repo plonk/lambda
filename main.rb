@@ -1,8 +1,8 @@
 #!/usr/bin/ruby
 # vim: set shiftwidth=2:tabstop=2:
 # -*- coding: utf-8 -*-
-require './lambda.tab.rb'
-require  './lexer.rb'
+require_relative 'lambda.tab.rb'
+require_relative  'lexer.rb'
 require 'readline'
 
 LAMBDA = "\u03bb"
@@ -54,7 +54,7 @@ def repl_command(line)
     history = [exp.show]
     
     until (redexes = exp.select{|x| x.redex?}).empty?
-      if redexes.size==1
+      if redexes.size>=1
         exp = beta_reduce(exp, redexes[0])
       else
         puts "ベータredex:"
@@ -94,12 +94,21 @@ end
 
 def read_eval_print_loop
   loop do
-    line = Readline.readline "\nREPL> ", true
+    begin
+      line = Readline.readline "\nREPL> ", true
+    rescue Interrupt
+      STDERR.print "^C"
+      retry
+    end
     break if line == nil
 
     begin
       if line =~ /^:/
-        repl_command(line)
+        begin
+          repl_command(line)
+        rescue Interrupt
+          STDERR.puts "Interrupted"
+        end
         next
       end
 
