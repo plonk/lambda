@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'English'
 
 =begin
@@ -25,7 +26,7 @@ class Lexer
         [$MATCH, $MATCH]
       when /\A[()\\.\/\[\]]/
         [$MATCH, $MATCH]
-      when /\A[a-z]'*/
+      when /\A[a-z][a-z0-9]*'*/
         [:VAR, $MATCH]
       else
         raise "illegal token"

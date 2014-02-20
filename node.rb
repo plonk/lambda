@@ -63,7 +63,7 @@ class Apply < Node
     a = @applicand.show
     b = @argument.show
     b = "(#{b})" if Apply === @argument
-    "#{a}#{b}"
+    "#{a} #{b}"
   end
 
   def free_variables(bound)
@@ -94,10 +94,11 @@ class Abst < Node
   end
 
   def show(params = "")
-    params += @param
+    params = "#{params} #{@param}"
     if @body.is_a? Abst
       @body.show(params)
     else
+      params = params.sub(/^ /, '')
       "(\\#{params}.#{@body.show})"
     end
   end
