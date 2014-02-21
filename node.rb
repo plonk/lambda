@@ -4,6 +4,10 @@ require_relative 'util.rb'
 class Node
   include Enumerable
 
+  def alpha_equiv?(other)
+    self.show([]) == other.show([])
+  end
+
   def show
     raise 'unimplemented'
   end
@@ -12,7 +16,7 @@ class Node
     raise 'unimplemented'
   end
 
-  def show
+  def show(bindings=nil, level=0)
     raise 'unimplemented'
   end
 
@@ -38,8 +42,17 @@ class Var < Node
     @name = name.as String
   end
 
-  def show
-    @name
+  def show(bindings=nil, level=0)
+    if bindings
+      name, alevel = bindings.assoc(@name)
+      if name
+        (level-alevel).to_s
+      else # free variable
+        @name
+      end
+    else
+      @name
+    end
   end
 
   def free_variables(bound)
@@ -59,9 +72,9 @@ class Apply < Node
     @argument = argument.as Node
   end
 
-  def show
-    a = @applicand.show
-    b = @argument.show
+  def show(bindings=nil, level=0)
+    a = @applicand.show(bindings, level)
+    b = @argument.show(bindings, level)
     b = "(#{b})" if Apply === @argument
     "#{a} #{b}"
   end
@@ -93,13 +106,21 @@ class Abst < Node
     @body = body.as Node
   end
 
-  def show(params = "")
-    params = "#{params} #{@param}"
-    if @body.is_a? Abst
-      @body.show(params)
+  def show(bindings=nil, level=0, params = "")
+    if bindings
+      bindings = [[@param, level]] + bindings
+    end
+
+    if bindings
+      "(\\ #{@body.show(bindings, level+1)})"
     else
-      params = params.sub(/^ /, '')
-      "(\\#{params}.#{@body.show})"
+      params = "#{params} #{@param}"
+      if @body.is_a? Abst
+        @body.show(bindings, level+1, params)
+      else
+        params = params.sub(/^ /, '')
+        "(\\#{params}.#{@body.show(bindings, level+1)})"
+      end
     end
   end
 
@@ -146,9 +167,8 @@ class Subst < Node
     end
   end
 
-  def show
-    # substitute(@lambda).show
-    "(#{@lambda.show})[#{@to}/#{@from}]"
+  def show(bindings=nil, level=0)
+    "(#{@lambda.show(bindings, level)})[#{@to}/#{@from}]"
   end
 
   def free_variables(bound)
@@ -212,9 +232,8 @@ class TermSubst < Node
     end
   end
 
-  def show
-    # substitute(@lambda).show
-    "(#{@lambda.show})[#{@from}:=#{@to.show}]"
+  def show(bindings=nil, level=0)
+    "(#{@lambda.show(bindings,level)})[#{@from}:=#{@to.show}]"
   end
 
   def free_variables(bound)

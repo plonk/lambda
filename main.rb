@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 # vim: set shiftwidth=2:tabstop=2:
 # -*- coding: utf-8 -*-
+require 'readline'
+require 'English'
 require_relative 'lambda.tab.rb'
 require_relative 'michaelson.tab.rb'
 require_relative 'lexer.rb'
 require_relative 'util.rb'
-require 'readline'
-require 'English'
+require_relative 'macro.rb'
 
 class Matcher
   def initialize(command_name)
@@ -32,6 +33,7 @@ class Program
   end
 
   def parse(line)
+    line = @macro.expand line
     lexer = Lexer.new(line)
     parser = @parser_class.new(lexer)
     parser.parse
@@ -62,6 +64,11 @@ class Program
         fvars = fv(parse(arg)) 
         puts '{' + fvars.join(',') + '}'
       end
+    when Matcher.new('index')
+      if arg
+        bindings = []
+        puts parse(arg).show(bindings)
+      end
     when Matcher.new('reduce')
       # 自動簡約
       exp = substitute(parse(arg))
@@ -81,6 +88,13 @@ class Program
         history << exp.show
       end
       puts exp.show
+      result = @macro.select { |name, definition|
+        exp.alpha_equiv? parse( @macro.expand(name) )
+      }
+      if result.any?
+        str = result.map(&:first).join(' = ')
+        puts "\t= #{str}"
+      end
     when Matcher.new('ireduce')
       # redex 指定の簡約
       exp = substitute(parse(arg))
@@ -188,6 +202,21 @@ class Program
       puts optparse.help
       return 1
     end
+
+    @macro = MacroProcessor.new
+    [
+     ['select_first', '\x y.x'],
+     ['iszero', '\n.n select_first'],
+     ['TWO', 'succ ONE'],
+     ['ONE', 'succ ZERO'],
+     ['succ', '\n s.(s F) n'],
+     ['F', '\x y.y'],
+     ['ZERO', 'I'],
+     ['I', '\x.x'],
+     ['T', 'select_first'],
+     ['S', '\x y z.x z (y z)'],
+     ['K', 'select_first'],
+    ].each { |n,d| @macro.define n, d }
 
     title
     read_eval_print_loop

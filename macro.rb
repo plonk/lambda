@@ -32,10 +32,11 @@ class MacroProcessor
     if result then result[1] else nil end
   end
 
-  def to_name definition
-    # 本当は α同値でみなきゃだめ
-    result = @table.rassoc(definition)
-    if result then result[0] else nil end
+  include Enumerable
+  def each
+    @table.each do |name, definition|
+      yield(name, definition)
+    end
   end
 
   def pattern
