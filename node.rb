@@ -4,6 +4,7 @@ require_relative 'util.rb'
 class Node
   include Enumerable
 
+  # ドブランインデックス表記で文字列化する。
   def self.to_bruijn(node, bindings=[], level=0)
     node.as Node
     bindings.as [[String, Integer]]
@@ -25,6 +26,7 @@ class Node
     end
   end
 
+  # α同値を判定する。
   def alpha_equiv?(other)
     self.to_bruijn == other.to_bruijn
   end
