@@ -4,8 +4,29 @@ require_relative 'util.rb'
 class Node
   include Enumerable
 
+  def self.to_bruijn(node, bindings=[], level=0)
+    node.as Node
+    bindings.as [[String, Integer]]
+    
+    case node
+    when Var
+      name, alevel = bindings.assoc(node.name)
+      if name then (level-alevel).to_s else node.name end
+    when Abst
+      body = Node.to_bruijn(node.body, [[node.param, level]] + bindings, level+1)
+      "(\\ #{body})"
+    when Apply
+      app = Node.to_bruijn(node.applicand, bindings, level)
+      arg = Node.to_bruijn(node.argument, bindings, level)
+      arg = "(#{arg})" if node.argument.is_a? Apply
+      "#{app} #{arg}"
+    else
+      raise "to_bruijn: unsupported node #{node}"
+    end
+  end
+
   def alpha_equiv?(other)
-    self.show([]) == other.show([])
+    self.to_bruijn == other.to_bruijn
   end
 
   def show
@@ -16,8 +37,13 @@ class Node
     raise 'unimplemented'
   end
 
-  def show(bindings=nil, level=0)
+  def show
     raise 'unimplemented'
+  end
+
+  def to_bruijn
+    bindings = []
+    Node.to_bruijn(self)
   end
 
   # 深さ優先探索。
@@ -42,17 +68,8 @@ class Var < Node
     @name = name.as String
   end
 
-  def show(bindings=nil, level=0)
-    if bindings
-      name, alevel = bindings.assoc(@name)
-      if name
-        (level-alevel).to_s
-      else # free variable
-        @name
-      end
-    else
-      @name
-    end
+  def show
+    @name
   end
 
   def free_variables(bound)
@@ -72,9 +89,9 @@ class Apply < Node
     @argument = argument.as Node
   end
 
-  def show(bindings=nil, level=0)
-    a = @applicand.show(bindings, level)
-    b = @argument.show(bindings, level)
+  def show
+    a = @applicand.show
+    b = @argument.show
     b = "(#{b})" if Apply === @argument
     "#{a} #{b}"
   end
@@ -106,21 +123,13 @@ class Abst < Node
     @body = body.as Node
   end
 
-  def show(bindings=nil, level=0, params = "")
-    if bindings
-      bindings = [[@param, level]] + bindings
-    end
-
-    if bindings
-      "(\\ #{@body.show(bindings, level+1)})"
+  def show(params = "")
+    params = "#{params} #{@param}"
+    if @body.is_a? Abst
+      @body.show(params)
     else
-      params = "#{params} #{@param}"
-      if @body.is_a? Abst
-        @body.show(bindings, level+1, params)
-      else
-        params = params.sub(/^ /, '')
-        "(\\#{params}.#{@body.show(bindings, level+1)})"
-      end
+      params = params.sub(/^ /, '')
+      "(\\#{params}.#{@body.show})"
     end
   end
 
@@ -167,8 +176,8 @@ class Subst < Node
     end
   end
 
-  def show(bindings=nil, level=0)
-    "(#{@lambda.show(bindings, level)})[#{@to}/#{@from}]"
+  def show
+    "(#{@lambda.show})[#{@to}/#{@from}]"
   end
 
   def free_variables(bound)
@@ -232,8 +241,8 @@ class TermSubst < Node
     end
   end
 
-  def show(bindings=nil, level=0)
-    "(#{@lambda.show(bindings,level)})[#{@from}:=#{@to.show}]"
+  def show
+    "(#{@lambda.show})[#{@from}:=#{@to.show}]"
   end
 
   def free_variables(bound)
