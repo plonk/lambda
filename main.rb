@@ -67,7 +67,7 @@ class Program
     when Matcher.new('index')
       if arg
         bindings = []
-        puts parse(arg).show(bindings)
+        puts parse(arg).to_bruijn
       end
     when Matcher.new('reduce')
       # 自動簡約
@@ -205,17 +205,17 @@ class Program
 
     @macro = MacroProcessor.new
     [
-     ['select_first', '\x y.x'],
-     ['iszero', '\n.n select_first'],
-     ['TWO', 'succ ONE'],
-     ['ONE', 'succ ZERO'],
-     ['succ', '\n s.(s F) n'],
-     ['F', '\x y.y'],
-     ['ZERO', 'I'],
-     ['I', '\x.x'],
-     ['T', 'select_first'],
-     ['S', '\x y z.x z (y z)'],
-     ['K', 'select_first'],
+     ['select_first',	'\x y.x'],
+     ['iszero',		'\n.n select_first'],
+     ['TWO',		'succ ONE'],
+     ['ONE',		'succ ZERO'],
+     ['succ',		'\n s.(s F) n'],
+     ['F',		'\x y.y'],
+     ['ZERO',		'I'],
+     ['I',		'\x.x'],
+     ['T',		'select_first'],
+     ['S',		'\x y z.x z (y z)'],
+     ['K',		'select_first'],
     ].each { |n,d| @macro.define n, d }
 
     title
